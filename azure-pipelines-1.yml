@@ -1,0 +1,27 @@
+trigger: none  # Manual or CI trigger from build pipeline
+
+resources:
+  pipelines:
+  - pipeline: buildPipeline
+    source: Oles12.DevopsBasics  # Your build pipeline name
+    trigger: true  # Set to false if you want to trigger manually
+
+stages:
+- stage: QA_Environment
+  displayName: 'Deploy to QA Environment'
+  jobs:
+  - deployment: DeployToWebApp
+    environment: 'QA Environment'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: buildPipeline
+            artifact: warfile
+
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: '<your-service-connection-name>'
+              appType: 'webAppLinux'
+              appName: 'webappdemo-bec6evh9hadrezaw'
+              package: '$(Pipeline.Workspace)/buildPipeline/warfile/*.war'
